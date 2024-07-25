@@ -1,16 +1,15 @@
 CC       := gcc
-
-CPPFLAGS := -Iinclude # -MMD -MP
+CPPFLAGS := -Iinclude
 CFLAGS   := -Wall -g -O0
 LDLIBS   := 
 
-EXE := fsw.exe
+EXE := fsw
 
 .PHONY: all clean
 all: $(EXE)
 
-fsw.exe: src/main.c
+$(EXE): src/main.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(LDLIBS)
 
 clean:
-	rm -rf $(EXE) *.d
+	rm -rf $(EXE)
