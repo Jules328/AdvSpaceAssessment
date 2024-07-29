@@ -6,6 +6,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#define CMD_ACC     0x55
+#define CMD_NO_ACC  0xAA
+
 typedef enum states {
     RESTARTING  = 1U << 0,
     READY       = 1U << 1,
@@ -130,6 +133,7 @@ int main(void) {
             case READY:
                 if (num_cmds_rejected == 5) {
                     printf("Transitioning to SAFE_MODE\n");
+                    num_cmds_rejected = 0;
                     state = SAFE_MODE;
                     ++num_safe_modes;
                 }
@@ -146,7 +150,7 @@ int main(void) {
 
         /* Check for commands */
         if (recvfrom(command_socket, &command, sizeof(command), 0, (struct sockaddr*) &client_addr, &client_addr_size) != -1) {
-            printf("Recieved a Command: %u!\n", command);
+            printf("Recieved a Command: 0x%02x!\n", command);
 
             /* reset response buffer */
             memset(&buf, 0, buf_len);
@@ -154,7 +158,6 @@ int main(void) {
 
             /* Check if command is being used in invalid state */
             if ((command & state) != 0) {
-                printf("Command used in wrong state. command: %d, state %d\n", command, state);
                 command = INVALID;
             }
 
@@ -195,8 +198,6 @@ int main(void) {
                 case SHUTDOWN:
                     printf("Shutting Down\n");
                     should_shutdown = 1;
-                    memset(buf + buf_len, 0xff, 1); /* Sends 1 0xff byte to signal shutting down */
-                    ++buf_len;
                     break;
                 default: /* catches improper commands*/
                     command = INVALID;
@@ -205,11 +206,14 @@ int main(void) {
 
             /* Increment correct counters */
             if (command == INVALID) {
-                printf("Recieved Invalid Command\n");
+                printf("Command is invalid\n");
+                memset(buf + buf_len, CMD_NO_ACC, 1);
                 ++num_cmds_rejected;
             } else {
+                memset(buf + buf_len, CMD_ACC, 1);
                 ++num_cmds_recieved;
             }
+            ++buf_len;
 
             /* Add state info to the response message buffer */
             memcpy(buf + buf_len, &state, sizeof(state));
