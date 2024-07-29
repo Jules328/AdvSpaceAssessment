@@ -30,6 +30,14 @@ commands_with_return = {Commands.NUM_CMDS_RECEIVED: "Number of correct commands 
 
 # function to send a command to gcs and grab the returned data and return it (if not timed out)
 def send_gcs_command(s: socket.socket, addr, command: Commands) -> bytes:
+    # clear input buffer (in case FSW and GCS are out of sync)
+    while (True):
+        try:
+            s.recvfrom(64)
+        except socket.timeout:
+            break
+
+    # send command to FSW
     print(f"Sending {command.name}")
     s.sendto(command.value.to_bytes(1, 'little'), addr)
 
