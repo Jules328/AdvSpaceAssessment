@@ -86,11 +86,12 @@ if __name__ == '__main__':
     s.settimeout(0.1) # sets a small timeout for receive calls
 
     # get user input of target address
-    user_input = input("Input FSW IP address and port (xxx.xxx.xxx.xxx:yyy, defaults to local host)")
+    user_input = input("Input FSW IP address and port (xxx.xxx.xxx.xxx:yyy, defaults to local host): ")
     try:
         split_input = user_input.split(':')
         server_addr = (split_input[0], int(split_input[-1]))
         socket.inet_aton(server_addr[0]) # attempts to parse given address to bytes
+        print(f"Using {server_addr[0]}:{server_addr[1]}")
     except: # multiple possible reasons to end up here
         print("Using localhost and port 8080")
         server_addr = ('127.0.0.1', 8080)
